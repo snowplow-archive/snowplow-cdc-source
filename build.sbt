@@ -14,8 +14,10 @@ lazy val root = project.in(file("."))
       "Sonatype OSS Snapshots" at "http://oss.sonatype.org/content/repositories/snapshots/"
     ),
     libraryDependencies ++= Seq(
+      Dependencies.debeziumCore,
       Dependencies.debezium,
       Dependencies.debeziumMysql,
+      Dependencies.connectTransformers,
 
       Dependencies.scopt,
       Dependencies.scalaz7,

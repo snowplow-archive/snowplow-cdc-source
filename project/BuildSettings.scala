@@ -30,7 +30,7 @@ object BuildSettings {
   lazy val scalifySettings = Seq(
     sourceGenerators in Compile += Def.task {
       val file = (sourceManaged in Compile).value / "settings.scala"
-    IO.write(file, """package com.snowplowanalytics.snowplowcdcsource.generated
+    IO.write(file, """package com.snowplowanalytics.cdcsource.generated
                       |object ProjectMetadata {
                       |  val version = "%s"
                       |  val name = "%s"

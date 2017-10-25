@@ -25,8 +25,11 @@ object Dependencies {
     val scalaCheck       = "1.12.2"
   }
 
+  val debeziumCore     = "io.debezium"                % "debezium-core"              % "0.6.0"
   val debezium         = "io.debezium"                % "debezium-embedded"          % "0.6.0"
   val debeziumMysql    = "io.debezium"                % "debezium-connector-mysql"   % "0.6.0"
+
+  val connectTransformers = "org.apache.kafka"        % "connect-transforms"         % "0.11.0.1"
 
   // Scala
   val scopt            = "com.github.scopt"           %% "scopt"                     % V.scopt
