@@ -19,7 +19,7 @@ object Main {
   def main(args: Array[String]): Unit = {
 
     // Turn back when it exits silently
-    // BasicConfigurator.configure()
+    BasicConfigurator.configure()
     Connect.engine.run()
   }
 }

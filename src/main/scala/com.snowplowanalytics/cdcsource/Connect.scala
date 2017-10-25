@@ -1,18 +1,15 @@
 package com.snowplowanalytics.cdcsource
 
 import scala.collection.convert.decorateAsScala._
-
 import java.util.function.Consumer
 
 import io.debezium.embedded.EmbeddedEngine
 import io.debezium.config.Configuration
-
-import org.apache.kafka.connect.data.Field
-import org.apache.kafka.connect.data.Schema
+import org.apache.kafka.connect.data.{Field, Schema, Struct}
 import org.apache.kafka.connect.source.SourceRecord
-
-import org.json4s.JsonAST.{JObject, JString, JValue}
-import org.json4s.jackson.compactJson
+import org.json4s.JsonAST.{JBool, JObject, JString, JValue}
+import org.json4s.JsonDSL._
+import org.json4s.jackson.prettyJson
 
 
 object Connect {
@@ -45,9 +42,17 @@ object Connect {
     .notifying(new Printer)
     .build()
 
-
-
-  case class Payload(beforeSchema: JValue, afterSchema: JValue, vendor: String)
+  case class Payload(beforeSchema: JValue, afterSchema: JValue, vendor: String, name: String) {
+    def toJson: String = {
+      val schema = JObject(List(
+        "vendor" -> JString(vendor),
+        "name" -> JString(name),
+        "format" -> JString("jsonschema"),
+        "version" -> JString("1-0-0")
+      )).merge(JObject(List("before" -> beforeSchema, "after" -> afterSchema)))
+      prettyJson(schema)
+    }
+  }
 
   def fieldToSchema(field: Field): JValue = {
     if (field.schema() == Schema.BOOLEAN_SCHEMA) JObject(List("type" -> JString("boolean")))
@@ -68,6 +73,25 @@ object Connect {
     else JObject(Nil)
   }
 
+  def fieldToData(record: SourceRecord): JValue = {
+    if (record.valueSchema() == Schema.BOOLEAN_SCHEMA) JBool(record.value().asInstanceOf[Boolean])
+    else if (record.valueSchema() == Schema.STRING_SCHEMA) JString(record.value().asInstanceOf[String])
+    else if (record.valueSchema() == Schema.OPTIONAL_STRING_SCHEMA) JString(Option[AnyRef](record.value()).asInstanceOf[Option[String]].getOrElse(""))
+
+    // else if (record.schema() == Schema.INT8_SCHEMA) JObject(List("type" -> JString("integer")))
+    // else if (record.schema() == Schema.INT16_SCHEMA) JObject(List("type" -> JString("integer")))
+    // else if (record.schema() == Schema.INT32_SCHEMA) JObject(List("type" -> JString("integer")))
+    // else if (record.schema() == Schema.FLOAT32_SCHEMA) JObject(List("type" -> JString("number")))
+    // else if (record.schema() == Schema.FLOAT64_SCHEMA) JObject(List("type" -> JString("number")))
+
+    else if (record.valueSchema().`type`() == Schema.Type.STRUCT) {
+      record.valueSchema().fields().asScala.toList
+      JObject(List(record.value().asInstanceOf[String] -> JString("OBJECT")))
+    }
+    else JObject(Nil)
+
+  }
+
   def extractSchema(schema: Schema) = {
     if (schema.`type`().isPrimitive) {
       JObject(Nil)
@@ -80,12 +104,14 @@ object Connect {
   def extractPayload(record: SourceRecord): Payload = {
     val kafkaSchemaBefore = record.valueSchema().field("before").schema()
     val kafkaSchemaAfter = record.valueSchema().field("after").schema()
-    Payload(extractSchema(kafkaSchemaBefore), extractSchema(kafkaSchemaAfter), Vendor)
+    val name = record.value().asInstanceOf[Struct].get("source").asInstanceOf[Struct].get("table").asInstanceOf[String]
+    println(record)
+    Payload(extractSchema(kafkaSchemaBefore), extractSchema(kafkaSchemaAfter), Vendor, name)
   }
 
   class Printer extends Consumer[SourceRecord] {
     override def accept(record: SourceRecord): Unit = {
-      println(extractPayload(record))
+      println(extractPayload(record).toJson)
     }
   }
 }
