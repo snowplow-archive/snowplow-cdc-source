@@ -19,6 +19,8 @@ lazy val root = project.in(file("."))
       Dependencies.debeziumMysql,
       Dependencies.connectTransformers,
 
+      Dependencies.igluClient,
+
       Dependencies.scopt,
       Dependencies.scalaz7,
       Dependencies.json4sJackson,

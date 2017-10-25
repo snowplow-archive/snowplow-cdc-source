@@ -1,20 +1,23 @@
 package com.snowplowanalytics.cdcsource
 
-import io.debezium.embedded.EmbeddedEngine
-import io.debezium.config.Configuration
+import scala.collection.convert.decorateAsScala._
+
 import java.util.function.Consumer
 
-import org.apache.kafka.common.protocol.types.Type
+import io.debezium.embedded.EmbeddedEngine
+import io.debezium.config.Configuration
 
-import scala.collection.convert.decorateAsScala._
 import org.apache.kafka.connect.data.Field
 import org.apache.kafka.connect.data.Schema
 import org.apache.kafka.connect.source.SourceRecord
+
 import org.json4s.JsonAST.{JObject, JString, JValue}
 import org.json4s.jackson.compactJson
 
 
 object Connect {
+
+  val Vendor = "com.acme"
 
   val offsetStorage = "/Users/chuwy/offset.dat"
   val dbStorage = "/Users/chuwy/dbhistory.dat"
@@ -41,6 +44,8 @@ object Connect {
     .using(config)
     .notifying(new Printer)
     .build()
+
+
 
   case class Payload(beforeSchema: JValue, afterSchema: JValue, vendor: String)
 
@@ -72,13 +77,15 @@ object Connect {
     }
   }
 
+  def extractPayload(record: SourceRecord): Payload = {
+    val kafkaSchemaBefore = record.valueSchema().field("before").schema()
+    val kafkaSchemaAfter = record.valueSchema().field("after").schema()
+    Payload(extractSchema(kafkaSchemaBefore), extractSchema(kafkaSchemaAfter), Vendor)
+  }
+
   class Printer extends Consumer[SourceRecord] {
     override def accept(record: SourceRecord): Unit = {
-      val kafkaSchemaBefore = record.valueSchema().field("before").schema()
-      val kafkaSchemaAfter = record.valueSchema().field("after").schema()
-      val schema = JObject("before" -> extractSchema(kafkaSchemaBefore), "after" -> extractSchema(kafkaSchemaAfter))
-
-      println(compactJson(schema))
+      println(extractPayload(record))
     }
   }
 }

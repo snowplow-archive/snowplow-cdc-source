@@ -19,17 +19,23 @@ object Dependencies {
     val scopt            = "3.6.0"
     val scalaz7          = "7.0.9"
     val json4sJackson    = "3.2.11"
+    // Debezium
+    val debezium         = "0.6.0"
+    // Snowplow
+    val igluClient       = "0.5.0"
     // Scala (test only)
     val specs2           = "2.3.13"
     val scalazSpecs2     = "0.2"
     val scalaCheck       = "1.12.2"
   }
 
-  val debeziumCore     = "io.debezium"                % "debezium-core"              % "0.6.0"
-  val debezium         = "io.debezium"                % "debezium-embedded"          % "0.6.0"
-  val debeziumMysql    = "io.debezium"                % "debezium-connector-mysql"   % "0.6.0"
-
+  val debeziumCore     = "io.debezium"                % "debezium-core"              % V.debezium
+  val debezium         = "io.debezium"                % "debezium-embedded"          % V.debezium
+  val debeziumMysql    = "io.debezium"                % "debezium-connector-mysql"   % V.debezium
   val connectTransformers = "org.apache.kafka"        % "connect-transforms"         % "0.11.0.1"
+
+  // Snowplow
+  val igluClient       = "com.snowplowanalytics"      %% "iglu-scala-client"         % V.igluClient
 
   // Scala
   val scopt            = "com.github.scopt"           %% "scopt"                     % V.scopt
